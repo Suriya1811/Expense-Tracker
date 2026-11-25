@@ -1,0 +1,5 @@
+<resources>
+    <string name="expense_widget_description">Current month credit, debit, net and spending limit</string>
+    <string name="expense_widget_name">Expense Tracker · Monthly overview</string>
+    <string name="widget_add_description">Add transaction</string>
+</resources>

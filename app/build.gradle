@@ -1,0 +1,14 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.suriya.expensetracker'
+    compileSdk 36
+    defaultConfig {
+        applicationId 'com.suriya.expensetracker'
+        minSdk 26
+        targetSdk 36
+        versionCode 10
+        versionName '10.0'
+    }
+}
+

@@ -1,0 +1,28 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:paddingLeft="16dp" android:paddingRight="16dp"
+    android:paddingTop="12dp" android:paddingBottom="12dp" android:background="@drawable/widget_background">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="36dp" android:gravity="center_vertical" android:orientation="horizontal">
+        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="MONTHLY OVERVIEW" android:textColor="#ABABAB" android:textSize="9sp" android:letterSpacing="0.08" android:maxLines="1" />
+            <TextView android:id="@+id/widget_month" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="This month" android:textColor="#FFFFFF" android:textStyle="bold" android:textSize="15sp" android:maxLines="1" />
+        </LinearLayout>
+        <TextView android:id="@+id/widget_add" android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/widget_add_background" android:gravity="center" android:text="+" android:textColor="#111111" android:textStyle="bold" android:textSize="24sp" android:contentDescription="@string/widget_add_description" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="9dp" android:layout_marginBottom="9dp" android:orientation="horizontal">
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center_vertical" android:orientation="vertical" android:paddingLeft="9dp" android:paddingRight="5dp" android:background="@drawable/widget_metric_background">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="CREDIT" android:textColor="#BDBDBD" android:textSize="9sp" android:maxLines="1" />
+            <TextView android:id="@+id/widget_credit" android:layout_width="match_parent" android:layout_height="24dp" android:gravity="center_vertical" android:singleLine="true" android:text="—" android:textStyle="bold" android:textColor="#70DBA8" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9sp" android:autoSizeMaxTextSize="15sp" android:autoSizeStepGranularity="1sp" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginLeft="6dp" android:gravity="center_vertical" android:orientation="vertical" android:paddingLeft="9dp" android:paddingRight="5dp" android:background="@drawable/widget_metric_background">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="DEBIT" android:textColor="#BDBDBD" android:textSize="9sp" android:maxLines="1" />
+            <TextView android:id="@+id/widget_debit" android:layout_width="match_parent" android:layout_height="24dp" android:gravity="center_vertical" android:singleLine="true" android:text="—" android:textStyle="bold" android:textColor="#FF858C" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9sp" android:autoSizeMaxTextSize="15sp" android:autoSizeStepGranularity="1sp" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginLeft="6dp" android:gravity="center_vertical" android:orientation="vertical" android:paddingLeft="9dp" android:paddingRight="5dp" android:background="@drawable/widget_metric_background">
+            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="NET" android:textColor="#BDBDBD" android:textSize="9sp" android:maxLines="1" />
+            <TextView android:id="@+id/widget_net" android:layout_width="match_parent" android:layout_height="24dp" android:gravity="center_vertical" android:singleLine="true" android:text="—" android:textStyle="bold" android:textColor="#FFFFFF" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="9sp" android:autoSizeMaxTextSize="15sp" android:autoSizeStepGranularity="1sp" />
+        </LinearLayout>
+    </LinearLayout>
+    <TextView android:id="@+id/widget_limit" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="No limit set" android:textColor="#D0D0D0" android:textSize="10sp" android:singleLine="true" android:ellipsize="end" />
+    <ProgressBar android:id="@+id/widget_progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="4dp" android:layout_marginTop="5dp" android:max="100" android:progress="0" android:progressTint="#D0D0D0" android:progressBackgroundTint="#505050" />
+</LinearLayout>
