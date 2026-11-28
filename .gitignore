@@ -17,3 +17,5 @@ local-build/
 *.log
 .DS_Store
 Thumbs.db
+build-local.ps1
+build-local.ps1

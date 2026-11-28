@@ -11,7 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.math.BigDecimal;
 
 public final class Store extends SQLiteOpenHelper {
-    public Store(Context c) { super(c, "expenses.db", null, 7); }
+    private final Context appContext;
+    public Store(Context c) { super(c, "expenses.db", null, 7); appContext=c.getApplicationContext(); }
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE transactions (_id INTEGER PRIMARY KEY, amount INTEGER NOT NULL, kind TEXT NOT NULL, category TEXT NOT NULL, title TEXT NOT NULL, date INTEGER NOT NULL, review INTEGER NOT NULL DEFAULT 0, bank TEXT NOT NULL DEFAULT '')");
         db.execSQL("CREATE TABLE processed (fingerprint TEXT PRIMARY KEY)");
@@ -44,7 +45,7 @@ public final class Store extends SQLiteOpenHelper {
     public String categoryFor(String name) { String key=PayeeParser.normalize(name); if(key.isEmpty())return null; try(Cursor c=getReadableDatabase().rawQuery("SELECT category FROM payee_rules WHERE normalized=?",new String[]{key})){return c.moveToFirst()?c.getString(0):null;} }
     public void saveRule(String name, String category){String key=PayeeParser.normalize(name);if(key.isEmpty())throw new IllegalArgumentException("Payee name is required");ContentValues v=new ContentValues();v.put("normalized",key);v.put("name",name.trim().replaceAll("\\s+"," "));v.put("category",category);getWritableDatabase().insertWithOnConflict("payee_rules",null,v,SQLiteDatabase.CONFLICT_REPLACE);}
     public void removeRule(String name){getWritableDatabase().delete("payee_rules","normalized=?",new String[]{PayeeParser.normalize(name)});}
-    public int categorizeUncategorized(String name,String category){SQLiteDatabase db=getWritableDatabase();String key=PayeeParser.normalize(name);ArrayList<Long> ids=new ArrayList<>();try(Cursor c=db.rawQuery("SELECT _id,title FROM transactions WHERE kind='Expense' AND category='Uncategorized'",null)){while(c.moveToNext())if(key.equals(PayeeParser.normalize(c.getString(1))))ids.add(c.getLong(0));}int count=0;ContentValues v=new ContentValues();v.put("category",category);db.beginTransaction();try{for(Long id:ids)count+=db.update("transactions",v,"_id=? AND category='Uncategorized'",new String[]{id.toString()});db.setTransactionSuccessful();}finally{db.endTransaction();}return count;}
+    public int categorizeUncategorized(String name,String category){SQLiteDatabase db=getWritableDatabase();String key=PayeeParser.normalize(name);ArrayList<Long> ids=new ArrayList<>();try(Cursor c=db.rawQuery("SELECT _id,title FROM transactions WHERE kind='Expense' AND category='Uncategorized'",null)){while(c.moveToNext())if(key.equals(PayeeParser.normalize(c.getString(1))))ids.add(c.getLong(0));}int count=0;ContentValues v=new ContentValues();v.put("category",category);v.put("review",ReviewRules.needsReview("Expense",category)?1:0);db.beginTransaction();try{for(Long id:ids)count+=db.update("transactions",v,"_id=? AND category='Uncategorized'",new String[]{id.toString()});db.setTransactionSuccessful();}finally{db.endTransaction();}return count;}
     static String fingerprint(String sender, String body, long date) {
         try {
             byte[] bytes = MessageDigest.getInstance("SHA-256").digest(((sender == null ? "" : sender.toLowerCase(Locale.ROOT)) + "|" + body.trim() + "|" + new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date(date))).getBytes(StandardCharsets.UTF_8));
@@ -57,8 +58,8 @@ public final class Store extends SQLiteOpenHelper {
     }
     public synchronized boolean importSms(String sender, String body, long date) {
         ContentValues values = parse(sender,body,date); if(values == null) return false; values.put("bank",BankNames.fromSms(sender,body));
-        if("Expense".equals(values.getAsString("kind"))){String payee=PayeeParser.extract(body);if(payee!=null){values.put("title",payee);String category=categoryFor(payee);if(category!=null)values.put("category",category);}}
-        String key = fingerprint(sender,body,date); SQLiteDatabase db=getWritableDatabase();
+        if("Expense".equals(values.getAsString("kind"))){String payee=PayeeParser.extract(body);if(payee!=null){values.put("title",payee);String category=categoryFor(payee);if(category!=null)values.put("category",category);}}values.put("review",ReviewRules.needsReview(values.getAsString("kind"),values.getAsString("category"))?1:0);
+        String key = fingerprint(sender,body,date); appContext.getSharedPreferences("profile",Context.MODE_PRIVATE).edit().putString("salary_sms_signature_"+key,SalaryPattern.signature(sender,body)).apply(); SQLiteDatabase db=getWritableDatabase();
         db.beginTransaction(); try {
             ContentValues seen=new ContentValues(); seen.put("fingerprint",key);
             if(db.insertWithOnConflict("processed",null,seen,SQLiteDatabase.CONFLICT_IGNORE)==-1) { db.setTransactionSuccessful(); return false; }
@@ -95,7 +96,7 @@ public final class Store extends SQLiteOpenHelper {
         SQLiteDatabase db=getWritableDatabase();Map<Long,String> candidates=new LinkedHashMap<>();Map<Long,Integer> counts=new HashMap<>();Set<String> fingerprints=new HashSet<>();
         try(Cursor sms=context.getContentResolver().query(Telephony.Sms.Inbox.CONTENT_URI,new String[]{"address","body","date"},null,null,null)){
             if(sms==null)throw new IllegalStateException("SMS inbox unavailable");while(sms.moveToNext()){
-                String sender=sms.getString(0),body=sms.getString(1);long date=sms.getLong(2);ContentValues parsed=parse(sender,body,date);if(parsed==null)continue;String key=fingerprint(sender,body,date);if(!fingerprints.add(key))continue;
+                String sender=sms.getString(0),body=sms.getString(1);long date=sms.getLong(2);ContentValues parsed=parse(sender,body,date);if(parsed==null)continue;String key=fingerprint(sender,body,date);if(!fingerprints.add(key))continue;appContext.getSharedPreferences("profile",Context.MODE_PRIVATE).edit().putString("salary_sms_signature_"+key,SalaryPattern.signature(sender,body)).apply();
                 try(Cursor c=db.rawQuery("SELECT 1 FROM processed WHERE fingerprint=?",new String[]{key})){if(!c.moveToFirst())continue;}
                 ArrayList<Long> found=new ArrayList<>();try(Cursor c=db.rawQuery("SELECT _id FROM transactions WHERE amount=? AND kind=? AND date=?",new String[]{parsed.getAsLong("amount").toString(),parsed.getAsString("kind"),Long.toString(date)})){while(c.moveToNext())found.add(c.getLong(0));}
                 for(Long id:found)counts.put(id,counts.getOrDefault(id,0)+1);if(found.size()==1)candidates.put(found.get(0),key);
@@ -123,7 +124,7 @@ public final class Store extends SQLiteOpenHelper {
         int updated=0;db.beginTransaction();try{
             for(Map.Entry<Long,String> candidate:uniqueCandidates.entrySet()){
                 if(appearances.getOrDefault(candidate.getKey(),0)!=1)continue;
-                ContentValues values=new ContentValues();values.put("title",candidate.getValue());String category=categoryFor(candidate.getValue());if(category!=null)values.put("category",category);
+                ContentValues values=new ContentValues();values.put("title",candidate.getValue());String category=categoryFor(candidate.getValue());if(category!=null){values.put("category",category);values.put("review",ReviewRules.needsReview("Expense",category)?1:0);}
                 updated+=db.update("transactions",values,"_id=? AND title='SMS transaction' AND category='Uncategorized' AND review=1",new String[]{candidate.getKey().toString()});
             }
             db.setTransactionSuccessful();

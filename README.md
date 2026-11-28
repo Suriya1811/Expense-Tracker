@@ -6,8 +6,9 @@ An offline Android app for tracking personal income and expenses, fuel cycles, E
 
 ## Features
 
-- **Dashboard:** Monthly credit, debit and net totals, a category breakdown and a configurable monthly spending limit. Configured salary is included in the overview for every month; it is not automatically recorded as a bank transaction.
-- **Transaction tracker:** Add, edit, review and delete entries; filter by type, category, date or bank; import SMS and export a CSV report. Bank labels are derived from recognised sender IDs or bank names in supported messages and can be edited.
+- **Dashboard:** Opens to the current calendar month, even before any transactions are recorded; earlier recorded months can be selected. Shows monthly credit, debit and net totals, a category breakdown and a configurable monthly spending limit. Choose a manual salary or link a Tracker credit for each month. Manual salary is added to the overview; a linked credit is already counted as a transaction and is not added twice. The choice carries forward from its effective month.
+- **Transaction tracker:** Add, edit, review and delete entries; filter by type, category, date or bank; and import SMS. Bank labels are derived from recognised sender IDs or bank names in supported messages and can be edited.
+- **Salary matching:** A selected bank SMS can define a salary pattern. Future messages match only when the bank, amount and normalized SMS pattern match; ambiguous matches require manual selection. If the original SMS or bank name is unavailable, choose each month manually.
 - **SMS import:** With permission, scans messages on the device for likely bank transactions. It checks transaction patterns and rejects examples such as OTPs, promotional messages and failed payments. Rules are conservative and cannot recognise every bank format or authenticate an SMS sender.
 - **Fixed commitments:** Set up recurring commitments, then select the appropriate tracker transaction for each month. Linked transactions are excluded from the personal spending-limit calculation.
 - **Fuel tracker:** Record refuel date, odometer reading, quantity and amount. Link an existing tracker debit or enter the amount manually; later refuels close prior open cycles and enable mileage calculations.
@@ -18,11 +19,11 @@ An offline Android app for tracking personal income and expenses, fuel cycles, E
 
 ## App flow
 
-1. Open **Profile & settings** to set your name, salary and mileage range, if needed.
+1. Open **Profile & settings** to set your name and mileage range. In the **Monthly salary** card, tap **Edit**, then choose a Tracker credit or enter an amount manually. The current month is based on the device calendar.
 2. Add transactions in **Tracker**, or choose **Import SMS** and grant SMS permissions. Review the imported entries and categories.
 3. View monthly totals and set a spending limit on **Home**. Link monthly payments under **Fixed commitments** to exclude them from that limit.
 4. Add fuel cycles and EMI plans in their respective tabs. When recording a payment, select an existing tracker debit if you want it linked.
-5. Choose a folder for **Automatic backup** when prompted. Use **Restore backup** to merge a previously created Expense Tracker workbook into the app.
+5. Choose a folder for **Automatic backup** when prompted. Use **Import backup** to merge a previously created Expense Tracker workbook into the app.
 
 The app saves transactions and settings in private app storage on the device. The Excel workbook is separate and is not encrypted by the app; anyone with access to that file may be able to read its contents. A backup on the same device can be lost if the device is lost, reset or damaged; keep another copy if recovery matters.
 
@@ -74,6 +75,8 @@ Expense-Tracker/
 │       │   ├── Store.java               # SQLite data and SMS import
 │       │   ├── SmsRules.java            # SMS parsing and filtering
 │       │   ├── BankNames.java           # Sender and bank identification
+│       │   ├── SalaryPage.java          # Monthly salary setup
+│       │   ├── SalarySettings.java      # Salary matching and carry-forward
 │       │   ├── FuelPage.java            # Fuel cycles
 │       │   ├── EmiPage.java             # EMI plans and payments
 │       │   ├── CommitmentsPage.java     # Monthly commitments

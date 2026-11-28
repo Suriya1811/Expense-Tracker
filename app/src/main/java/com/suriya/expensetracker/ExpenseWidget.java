@@ -41,9 +41,9 @@ public final class ExpenseWidget extends AppWidgetProvider {
         Calendar start=Calendar.getInstance();start.set(Calendar.DAY_OF_MONTH,1);start.set(Calendar.HOUR_OF_DAY,0);start.set(Calendar.MINUTE,0);start.set(Calendar.SECOND,0);start.set(Calendar.MILLISECOND,0);Calendar end=(Calendar)start.clone();end.add(Calendar.MONTH,1);
         long credit=0,debit=0,personal=0;boolean loaded=false;
         try(Store store=new Store(context);Cursor c=store.getReadableDatabase().rawQuery("SELECT kind,COALESCE(SUM(amount),0) FROM transactions WHERE date>=? AND date<? GROUP BY kind",new String[]{""+start.getTimeInMillis(),""+end.getTimeInMillis()})){
-            while(c.moveToNext()){if("Income".equals(c.getString(0)))credit=c.getLong(1);else if("Expense".equals(c.getString(0)))debit=c.getLong(1);}personal=store.personalSpent(start.getTimeInMillis(),end.getTimeInMillis(),new SimpleDateFormat("yyyy-MM",Locale.US).format(start.getTime()));loaded=true;
+            while(c.moveToNext()){if("Income".equals(c.getString(0)))credit=c.getLong(1);else if("Expense".equals(c.getString(0)))debit=c.getLong(1);}personal=store.personalSpent(start.getTimeInMillis(),end.getTimeInMillis(),new SimpleDateFormat("yyyy-MM",Locale.US).format(start.getTime()));credit+=new SalarySettings(context,store).extraCredit(SalarySettings.period(start));loaded=true;
         }catch(Exception ignored){/* Display an unavailable state rather than misleading zeroes. */}
-        android.content.SharedPreferences prefs=context.getSharedPreferences("profile",Context.MODE_PRIVATE);credit+=prefs.getLong("salary",0);
+        android.content.SharedPreferences prefs=context.getSharedPreferences("profile",Context.MODE_PRIVATE);
         String monthKey=new SimpleDateFormat("yyyy-MM",Locale.US).format(start.getTime());long limit=prefs.getLong("limit_"+monthKey,0);long net=credit-debit;
         for(int widget:widgets){
             RemoteViews views=new RemoteViews(context.getPackageName(),id(context,"layout","expense_widget"));
